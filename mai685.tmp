@@ -1,0 +1,74 @@
+[gd_scene load_steps=7 format=3 uid="uid://cuw156inaimrm"]
+
+[ext_resource type="PackedScene" uid="uid://bm46wuswhhggi" path="res://tile_map.tscn" id="1_xybr0"]
+[ext_resource type="PackedScene" uid="uid://cnxgt6yrixs1g" path="res://character_body_2d.tscn" id="2_nrt52"]
+[ext_resource type="Texture2D" uid="uid://b8mfpuks3ifun" path="res://iso_tileset.png" id="2_vyl85"]
+[ext_resource type="Script" path="res://HUD.gd" id="4_mr5ri"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_x4fcs"]
+texture = ExtResource("2_vyl85")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(0, -8)
+0:0/0/physics_layer_0/linear_velocity = Vector2(0, 0)
+0:0/0/physics_layer_0/angular_velocity = 0.0
+0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-15.3125, 16.375, 0.1875, 23.375, 15.4375, 16.25, 0, 8)
+1:0/0 = 0
+1:0/0/texture_origin = Vector2i(0, -8)
+1:0/0/physics_layer_0/linear_velocity = Vector2(0, 0)
+1:0/0/physics_layer_0/angular_velocity = 0.0
+2:0/0 = 0
+2:0/0/texture_origin = Vector2i(0, -8)
+2:0/0/physics_layer_0/linear_velocity = Vector2(0, 0)
+2:0/0/physics_layer_0/angular_velocity = 0.0
+3:0/0 = 0
+3:0/0/texture_origin = Vector2i(0, -8)
+3:0/0/physics_layer_0/linear_velocity = Vector2(0, 0)
+3:0/0/physics_layer_0/angular_velocity = 0.0
+4:0/0 = 0
+4:0/0/texture_origin = Vector2i(0, -8)
+4:0/0/physics_layer_0/linear_velocity = Vector2(0, 0)
+4:0/0/physics_layer_0/angular_velocity = 0.0
+5:0/0 = 0
+5:0/0/texture_origin = Vector2i(0, -8)
+5:0/0/physics_layer_0/linear_velocity = Vector2(0, 0)
+5:0/0/physics_layer_0/angular_velocity = 0.0
+6:0/0 = 0
+6:0/0/texture_origin = Vector2i(0, -8)
+6:0/0/physics_layer_0/linear_velocity = Vector2(0, 0)
+6:0/0/physics_layer_0/angular_velocity = 0.0
+
+[sub_resource type="TileSet" id="TileSet_baeky"]
+tile_shape = 1
+tile_layout = 5
+tile_offset_axis = 1
+tile_size = Vector2i(32, 16)
+physics_layer_0/collision_layer = 1
+sources/0 = SubResource("TileSetAtlasSource_x4fcs")
+
+[node name="main" type="Node2D"]
+
+[node name="TileMap" parent="." instance=ExtResource("1_xybr0")]
+position = Vector2(0, -1)
+tile_set = SubResource("TileSet_baeky")
+layer_1/tile_data = PackedInt32Array(65540, 262144, 0, 131076, 262144, 0, 131077, 262144, 0, 131078, 262144, 0, 65542, 262144, 0, 6, 262144, 0, -65530, 262144, 0, -131066, 262144, 0, -131067, 262144, 0, -196603, 262144, 0, -196604, 262144, 0, -131068, 262144, 0, -65532, 262144, 0, 4, 262144, 0, 65541, 262144, 0, 5, 262144, 0, -65531, 262144, 0, -262135, 262144, 0, -327669, 262144, 0)
+layer_2/tile_data = PackedInt32Array(131077, 262144, 0, 131076, 262144, 0, 196614, 262144, 0, 131079, 262144, 0, 131078, 262144, 0, -327672, 262144, 0, -393206, 262144, 0)
+layer_3/tile_data = PackedInt32Array(131079, 262144, 0, 131078, 262144, 0, 131077, 262144, 0, 131076, 262144, 0, -458743, 262144, 0, -393209, 262144, 0)
+layer_4/tile_data = PackedInt32Array(65539, 262144, 0, 131077, 262144, 0, 131078, 262144, 0, 196614, 262144, 0, 196615, 262144, 0, 196616, 262144, 0, 196617, 262144, 0, 196618, 262144, 0, 131080, 262144, 0, 131079, 262144, 0, -196598, 262144, 0, -458746, 262144, 0)
+layer_5/tile_data = PackedInt32Array(131076, 262144, 0, 65540, 262144, 0, 65539, 262144, 0, 131077, 262144, 0, 131078, 262144, 0, 131079, 262144, 0, 65543, 262144, 0, 65544, 262144, 0, 131080, 262144, 0, 65542, 262144, 0, 65541, 262144, 0, -524283, 262144, 0)
+layer_6/name = "level6"
+layer_6/tile_data = PackedInt32Array(65544, 262144, 0, 65543, 262144, 0, 65542, 262144, 0, 65541, 262144, 0, 65540, 262144, 0, 65539, 262144, 0, -589820, 262144, 0)
+
+[node name="CharacterBody2D" parent="TileMap" groups=["player"] instance=ExtResource("2_nrt52")]
+position = Vector2(126, 19)
+
+[node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("4_mr5ri")
+
+[node name="HealthBar" type="TextureProgressBar" parent="HUD"]
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="InventoryLabel" type="Label" parent="HUD"]
+offset_right = 40.0
+offset_bottom = 23.0

@@ -1,0 +1,88 @@
+[gd_scene load_steps=5 format=3 uid="uid://bm46wuswhhggi"]
+
+[ext_resource type="Texture2D" uid="uid://b8mfpuks3ifun" path="res://iso_tileset.png" id="1_cgr67"]
+[ext_resource type="Script" path="res://tile_map.gd" id="2_eiihc"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_l24jd"]
+texture = ExtResource("1_cgr67")
+texture_region_size = Vector2i(32, 32)
+0:0/0 = 0
+0:0/0/texture_origin = Vector2i(0, -8)
+0:0/0/physics_layer_0/linear_velocity = Vector2(0, 0)
+0:0/0/physics_layer_0/angular_velocity = 0.0
+1:0/0 = 0
+1:0/0/texture_origin = Vector2i(0, -8)
+1:0/0/physics_layer_0/linear_velocity = Vector2(0, 0)
+1:0/0/physics_layer_0/angular_velocity = 0.0
+2:0/0 = 0
+2:0/0/texture_origin = Vector2i(0, -8)
+2:0/0/physics_layer_0/linear_velocity = Vector2(0, 0)
+2:0/0/physics_layer_0/angular_velocity = 0.0
+3:0/0 = 0
+3:0/0/texture_origin = Vector2i(0, -8)
+3:0/0/physics_layer_0/linear_velocity = Vector2(0, 0)
+3:0/0/physics_layer_0/angular_velocity = 0.0
+3:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-15.75, 16, -0.375, 23.25, 15.125, 16.25, 0, 8)
+4:0/0 = 0
+4:0/0/texture_origin = Vector2i(0, -8)
+4:0/0/physics_layer_0/linear_velocity = Vector2(0, 0)
+4:0/0/physics_layer_0/angular_velocity = 0.0
+5:0/0 = 0
+5:0/0/texture_origin = Vector2i(0, -8)
+5:0/0/physics_layer_0/linear_velocity = Vector2(0, 0)
+5:0/0/physics_layer_0/angular_velocity = 0.0
+6:0/0 = 0
+6:0/0/texture_origin = Vector2i(0, -8)
+6:0/0/physics_layer_0/linear_velocity = Vector2(0, 0)
+6:0/0/physics_layer_0/angular_velocity = 0.0
+0:1/0 = 0
+0:1/0/texture_origin = Vector2i(0, -8)
+0:1/0/physics_layer_0/linear_velocity = Vector2(0, 0)
+0:1/0/physics_layer_0/angular_velocity = 0.0
+0:1/0/physics_layer_0/polygon_0/points = PackedVector2Array(0, -8, 16, 0, 0, 8, -16, 0)
+
+[sub_resource type="TileSet" id="TileSet_bdmxp"]
+tile_shape = 1
+tile_layout = 4
+tile_offset_axis = 1
+tile_size = Vector2i(32, 16)
+physics_layer_0/collision_layer = 1
+sources/0 = SubResource("TileSetAtlasSource_l24jd")
+
+[node name="TileMap" type="TileMap"]
+y_sort_enabled = true
+tile_set = SubResource("TileSet_bdmxp")
+format = 2
+layer_0/name = "level0"
+layer_0/y_sort_enabled = true
+layer_1/name = "level1"
+layer_1/y_sort_enabled = true
+layer_1/y_sort_origin = 1
+layer_1/z_index = 1
+layer_1/tile_data = PackedInt32Array()
+layer_2/name = "level2"
+layer_2/y_sort_enabled = true
+layer_2/y_sort_origin = 2
+layer_2/z_index = 2
+layer_2/tile_data = PackedInt32Array()
+layer_3/name = "level3"
+layer_3/y_sort_enabled = true
+layer_3/y_sort_origin = 3
+layer_3/z_index = 3
+layer_3/tile_data = PackedInt32Array()
+layer_4/name = "level4"
+layer_4/y_sort_enabled = true
+layer_4/y_sort_origin = 4
+layer_4/z_index = 4
+layer_4/tile_data = PackedInt32Array()
+layer_5/name = "level5"
+layer_5/y_sort_enabled = true
+layer_5/y_sort_origin = 5
+layer_5/z_index = 5
+layer_5/tile_data = PackedInt32Array()
+layer_6/name = "Layer6"
+layer_6/y_sort_enabled = true
+layer_6/y_sort_origin = 6
+layer_6/z_index = 6
+layer_6/tile_data = PackedInt32Array()
+script = ExtResource("2_eiihc")
