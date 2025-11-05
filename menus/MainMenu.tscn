@@ -1,0 +1,130 @@
+[gd_scene load_steps=3 format=3 uid="uid://bw8vjx3u4x7qr"]
+
+[ext_resource type="Script" path="res://menus/MainMenu.gd" id="1_main_menu"]
+[ext_resource type="Texture2D" uid="uid://b8mfpuks3ifun" path="res://iso_tileset.png" id="2_tileset"]
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main_menu")
+
+[node name="AnimatedBackground" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BackgroundGradient" type="ColorRect" parent="AnimatedBackground"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.15, 0.05, 1)
+
+[node name="TreeSprite1" type="Sprite2D" parent="AnimatedBackground"]
+modulate = Color(1, 1, 1, 0.3)
+position = Vector2(100, 150)
+scale = Vector2(2, 2)
+texture = ExtResource("2_tileset")
+region_enabled = true
+region_rect = Rect2(0, 0, 32, 32)
+
+[node name="TreeSprite2" type="Sprite2D" parent="AnimatedBackground"]
+modulate = Color(1, 1, 1, 0.2)
+position = Vector2(200, 300)
+scale = Vector2(1.5, 1.5)
+texture = ExtResource("2_tileset")
+region_enabled = true
+region_rect = Rect2(32, 0, 32, 32)
+
+[node name="TreeSprite3" type="Sprite2D" parent="AnimatedBackground"]
+modulate = Color(1, 1, 1, 0.25)
+position = Vector2(300, 100)
+scale = Vector2(1.8, 1.8)
+texture = ExtResource("2_tileset")
+region_enabled = true
+region_rect = Rect2(0, 0, 32, 32)
+
+[node name="TreeSprite4" type="Sprite2D" parent="AnimatedBackground"]
+modulate = Color(1, 1, 1, 0.15)
+position = Vector2(500, 250)
+scale = Vector2(2.2, 2.2)
+texture = ExtResource("2_tileset")
+region_enabled = true
+region_rect = Rect2(32, 0, 32, 32)
+
+[node name="DarkOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.4)
+
+[node name="MenuContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 80.0
+offset_top = 80.0
+offset_right = -80.0
+offset_bottom = -80.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MenuContainer"]
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MenuContainer/VBoxContainer"]
+layout_mode = 2
+text = "CLAREIRA"
+vertical_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="MenuContainer/VBoxContainer"]
+layout_mode = 2
+text = "Uma aventura na floresta misteriosa"
+
+[node name="HSeparator" type="HSeparator" parent="MenuContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+
+[node name="ButtonsContainer" type="VBoxContainer" parent="MenuContainer/VBoxContainer"]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+
+[node name="NewGameButton" type="Button" parent="MenuContainer/VBoxContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(280, 60)
+layout_mode = 2
+text = "▶ Novo Jogo"
+alignment = 0
+
+[node name="ContinueButton" type="Button" parent="MenuContainer/VBoxContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(280, 60)
+layout_mode = 2
+text = "📂 Continuar"
+alignment = 0
+
+[node name="OptionsButton" type="Button" parent="MenuContainer/VBoxContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(280, 60)
+layout_mode = 2
+text = "⚙️ Opções"
+alignment = 0
+
+[node name="QuitButton" type="Button" parent="MenuContainer/VBoxContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(280, 60)
+layout_mode = 2
+text = "🚪 Sair"
+alignment = 0
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]

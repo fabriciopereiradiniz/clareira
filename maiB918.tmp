@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3 uid="uid://cuw156inaimrm"]
+[gd_scene load_steps=9 format=3 uid="uid://cuw156inaimrm"]
 
 [ext_resource type="PackedScene" uid="uid://bm46wuswhhggi" path="res://tile_map.tscn" id="1_xybr0"]
 [ext_resource type="PackedScene" uid="uid://cnxgt6yrixs1g" path="res://character_body_2d.tscn" id="2_nrt52"]
@@ -6,7 +6,6 @@
 [ext_resource type="Script" path="res://Enemy.gd" id="4_bed1h"]
 [ext_resource type="Script" path="res://HUD.gd" id="4_mr5ri"]
 [ext_resource type="Texture2D" uid="uid://x71ydxviwr2w" path="res://heart.png" id="5_jk2vp"]
-[ext_resource type="Script" path="res://GameManager.gd" id="7_game_manager"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_x4fcs"]
 texture = ExtResource("2_vyl85")
@@ -65,8 +64,41 @@ layer_6/tile_data = PackedInt32Array(65544, 262144, 0, 65543, 262144, 0, 65542, 
 [node name="CharacterBody2D" parent="TileMap" groups=["player"] instance=ExtResource("2_nrt52")]
 position = Vector2(126, 19)
 
+[node name="CharacterBody2D2" type="CharacterBody2D" parent="TileMap"]
+position = Vector2(0, 1)
+script = ExtResource("4_bed1h")
+SPEED = 300.0
+
+[node name="Sprite2D" type="Sprite2D" parent="TileMap/CharacterBody2D2"]
+
 [node name="HUD" type="CanvasLayer" parent="."]
 script = ExtResource("4_mr5ri")
 
-[node name="GameManager" type="Node" parent="."]
-script = ExtResource("7_game_manager")
+[node name="InventoryGrid" type="GridContainer" parent="HUD"]
+offset_left = 576.0
+offset_top = 324.0
+offset_right = 576.0
+offset_bottom = 324.0
+
+[node name="HealthBar" type="TextureProgressBar" parent="HUD"]
+offset_right = 40.0
+offset_bottom = 40.0
+texture_under = ExtResource("5_jk2vp")
+texture_over = ExtResource("5_jk2vp")
+
+[node name="CenterContainer" type="CenterContainer" parent="HUD"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ScoreLabel" type="Label" parent="HUD"]
+offset_right = 40.0
+offset_bottom = 23.0
