@@ -34,6 +34,7 @@ var attack_timer: float = 0.0  # Timer para controlar duração do ataque
 var tree_damage_level: int = 1  # Nível de dano nas árvores (padrão 1)
 var tree_damage_base: float = 1.0  # Dano base por nível
 signal damage_level_changed(new_level)
+signal upgrade_completed(new_level, new_damage)
 
 func _ready() -> void:
 	# Adiciona ao grupo player para identificação
@@ -41,6 +42,12 @@ func _ready() -> void:
 	
 	# Cria área de pickup se não existir
 	setup_pickup_area()
+	
+	# Cria emoji de machado acima do player
+	create_weapon_indicator()
+	
+	# Cria sistema de partículas de poder
+	create_power_particles()
 	
 	# Snap inicial para o centro do tile
 	target_position = (position - Vector2(HALF_TILE, HALF_TILE)).snapped(Vector2(TILE_SIZE, TILE_SIZE)) + Vector2(HALF_TILE, HALF_TILE)
@@ -75,6 +82,8 @@ func _physics_process(delta: float) -> void:
 		if attack_timer <= 0:
 			is_attacking = false
 			modulate = Color.WHITE  # Restaura cor normal
+			# Desativa as partículas quando o ataque termina
+			activate_power_particles(false)
 			print("⚔️ Ataque finalizado, movimento liberado")
 	
 	# Auto-save
@@ -140,6 +149,13 @@ func _input(event):
 	if event is InputEventKey and event.pressed and event.keycode == KEY_U:
 		place_upgrade_station()
 	
+	# Tecla F para dar recursos de finalização (debug)
+	if event is InputEventKey and event.pressed and event.keycode == KEY_F:
+		print("🎁 CHEAT: Dando recursos para finalizar o jogo!")
+		add_item("wood", 100)
+		add_item("stone", 50)
+		print("✅ Recursos adicionados: 100 wood, 50 stone")
+	
 	# Sistema de ataque com clique do mouse (agora com bloqueio de movimento)
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and attack_cooldown <= 0 and not is_attacking:
 		var mouse_pos = get_global_mouse_position()
@@ -151,6 +167,8 @@ func _input(event):
 			is_attacking = true
 			attack_timer = attack_duration
 			moving = false  # Para o movimento atual
+			# Ativa as partículas de poder durante o ataque
+			activate_power_particles(true)
 			print("⚔️ Atacando! Movimento bloqueado por ", attack_duration, "s")
 
 func perform_area_attack(attack_position: Vector2):
@@ -179,6 +197,15 @@ func perform_area_attack(attack_position: Vector2):
 		var trees_after = tile_map.tree_registry.size()
 		if trees_after < trees_before:
 			trees_hit += 1
+	
+	# Minera pedras próximas
+	var stones_hit = 0
+	for pos in positions_to_check:
+		var stones_before = tile_map.stone_registry.size()
+		tile_map.mine_stone_at(pos)
+		var stones_after = tile_map.stone_registry.size()
+		if stones_after < stones_before:
+			stones_hit += 1
 	
 	# SISTEMA DE INIMIGOS SIMPLES E EFICIENTE
 	var enemies_hit = 0
@@ -268,15 +295,23 @@ func upgrade_tree_damage() -> bool:
 	var cost_wood = tree_damage_level * 10  # Custo em madeira aumenta por nível
 	var cost_stone = tree_damage_level * 5  # Custo em pedra aumenta por nível
 	
+	print("🔨 Tentando upgrade - Nível atual: ", tree_damage_level, " | Recursos: Wood=", get_item_count("wood"), " Stone=", get_item_count("stone"))
+	print("🔨 Custo necessário: Wood=", cost_wood, " Stone=", cost_stone)
+	
 	if has_item("wood", cost_wood) and has_item("stone", cost_stone):
 		remove_item("wood", cost_wood)
 		remove_item("stone", cost_stone)
 		tree_damage_level += 1
+		var new_damage = get_tree_damage()
 		emit_signal("damage_level_changed", tree_damage_level)
-		print("🔨 Tree damage upgraded to level ", tree_damage_level, " (damage: ", get_tree_damage(), ")")
+		emit_signal("upgrade_completed", tree_damage_level, new_damage)
+		update_power_particles()  # Atualiza as partículas de poder
+		print("✅ Tree damage upgraded to level ", tree_damage_level, " (damage: ", new_damage, ")")
+		print("✅ Novo dano: ", new_damage, " | Recursos restantes: Wood=", get_item_count("wood"), " Stone=", get_item_count("stone"))
 		return true
 	else:
 		print("❌ Insufficient resources for upgrade. Need ", cost_wood, " wood and ", cost_stone, " stone")
+		print("❌ Has wood? ", has_item("wood", cost_wood), " | Has stone? ", has_item("stone", cost_stone))
 		return false
 
 func get_upgrade_cost() -> Array:
@@ -312,25 +347,109 @@ func place_upgrade_station():
 	print("🏗️ Upgrade station placed at: ", placement_pos)
 	print("💰 Consumed ", build_cost_wood, " wood and ", build_cost_stone, " stone")
 
-func setup_pickup_area():
-	# Verifica se já existe uma área de pickup
-	var existing_area = get_node_or_null("PickupArea")
-	if existing_area:
-		return
+func create_weapon_indicator():
+	# Emoji de machado flutuando acima do player
+	var weapon_label = Label.new()
+	weapon_label.text = "🪓"
+	weapon_label.add_theme_font_size_override("font_size", 80)
+	weapon_label.position = Vector2(-40, -80)
+	weapon_label.name = "WeaponIndicator"
+	weapon_label.z_index = 10
+	add_child(weapon_label)
 	
-	# Cria área para pickup de itens
+	# Animação de flutuação
+	var float_tween = create_tween()
+	float_tween.set_loops()
+	float_tween.tween_property(weapon_label, "position:y", weapon_label.position.y - 5, 1.0)
+	float_tween.tween_property(weapon_label, "position:y", weapon_label.position.y, 1.0)
+	
+	# Animação de rotação suave
+	var rotate_tween = create_tween()
+	rotate_tween.set_loops()
+	rotate_tween.tween_property(weapon_label, "rotation", 0.2, 1.5)
+	rotate_tween.tween_property(weapon_label, "rotation", -0.2, 1.5)
+
+func create_power_particles():
+	# Sistema de partículas que aumenta com o nível
+	var particles = CPUParticles2D.new()
+	particles.name = "PowerParticles"
+	particles.emitting = false  # Começa desligado, só ativa durante ataque
+	particles.amount = 5  # Começa com poucas partículas
+	particles.lifetime = 0.8
+	particles.one_shot = false  # Permite ativar/desativar
+	particles.local_coords = true
+	particles.position = Vector2(0, -20)  # Acima do player
+	
+	# Configurações visuais
+	particles.direction = Vector2(0, -1)
+	particles.spread = 45
+	particles.initial_velocity_min = 20.0
+	particles.initial_velocity_max = 40.0
+	particles.gravity = Vector2(0, -10)  # Partículas sobem
+	particles.scale_amount_min = 2.0
+	particles.scale_amount_max = 4.0
+	
+	# Cores baseadas no poder
+	var gradient = Gradient.new()
+	gradient.add_point(0.0, Color.GOLD)
+	gradient.add_point(0.5, Color.ORANGE)
+	gradient.add_point(1.0, Color.TRANSPARENT)
+	particles.color_ramp = gradient
+	
+	add_child(particles)
+	
+	# Atualiza partículas baseado no nível inicial
+	update_power_particles()
+
+func activate_power_particles(active: bool):
+	# Ativa ou desativa as partículas de poder
+	var particles = get_node_or_null("PowerParticles")
+	if particles:
+		particles.emitting = active
+		if active:
+			print("✨ Partículas de poder ATIVADAS")
+		else:
+			print("✨ Partículas de poder DESATIVADAS")
+
+func update_power_particles():
+	# Atualiza quantidade de partículas baseado no nível de dano
+	var particles = get_node_or_null("PowerParticles")
+	if particles:
+		# Mais partículas = mais poder
+		particles.amount = 5 + (tree_damage_level - 1) * 5  # 5, 10, 15, 20, 25...
+		particles.initial_velocity_max = 40.0 + (tree_damage_level - 1) * 10.0
+		
+		# Muda cores conforme nível aumenta
+		var gradient = Gradient.new()
+		if tree_damage_level <= 2:
+			# Níveis baixos: dourado/laranja
+			gradient.add_point(0.0, Color.GOLD)
+			gradient.add_point(0.5, Color.ORANGE)
+		elif tree_damage_level <= 4:
+			# Níveis médios: laranja/vermelho
+			gradient.add_point(0.0, Color.ORANGE)
+			gradient.add_point(0.5, Color.RED)
+		else:
+			# Níveis altos: vermelho/roxo (poder máximo)
+			gradient.add_point(0.0, Color.RED)
+			gradient.add_point(0.5, Color.PURPLE)
+		gradient.add_point(1.0, Color.TRANSPARENT)
+		particles.color_ramp = gradient
+		
+		print("✨ Partículas de poder atualizadas: Nível ", tree_damage_level, " | Partículas: ", particles.amount)
+
+func setup_pickup_area():
+	# Cria uma área para coletar itens automaticamente
 	var pickup_area = Area2D.new()
 	pickup_area.name = "PickupArea"
-	pickup_area.add_to_group("player")
 	
 	var collision = CollisionShape2D.new()
 	var shape = CircleShape2D.new()
-	shape.radius = 30.0  # Raio de pickup
+	shape.radius = 50.0  # Raio de coleta
 	collision.shape = shape
 	pickup_area.add_child(collision)
 	
 	add_child(pickup_area)
-	print("🔍 Área de pickup criada para o player")
 
 # ======================
 #    SISTEMA DE SAVE
