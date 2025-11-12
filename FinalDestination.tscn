@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bvq2yw7xnhwqs"]
+
+[ext_resource type="Script" path="res://FinalDestination.gd" id="1_final"]
+
+[node name="FinalDestination" type="Node2D" groups=["final_destination"]]
+script = ExtResource("1_final")

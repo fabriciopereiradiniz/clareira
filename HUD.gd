@@ -28,6 +28,7 @@ func _ready():
 		player.health_changed.connect(_on_health_changed)
 		player.score_changed.connect(_on_score_changed)
 		player.inventory_changed.connect(_on_inventory_changed)
+		player.upgrade_completed.connect(_on_upgrade_completed)
 		
 		# Inicializa UI
 		setup_health_display()
@@ -70,7 +71,7 @@ func setup_mouse_particles():
 	mouse_particles.z_index = 999
 	
 	# Configurações das partículas
-	mouse_particles.emitting = true
+	mouse_particles.emitting = false  # Inicia desligado, só emite quando clicar direito
 	mouse_particles.amount = 50
 	mouse_particles.lifetime = 2.0
 	# Removido emission.rate_hz - não é necessário, será controlado por amount e lifetime
@@ -105,6 +106,9 @@ func _process(delta):
 	# Atualiza posição das partículas para seguir o mouse
 	if mouse_particles:
 		mouse_particles.position = get_viewport().get_mouse_position()
+		
+		# Ativa partículas apenas quando o botão esquerdo do mouse está pressionado
+		mouse_particles.emitting = Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 
 # Efeito de pontuação animada
 func create_score_effect(score_increase: int):
@@ -151,6 +155,79 @@ func change_score_color(score_label: Label, progress: float):
 	var color = Color.from_hsv(hue / 360.0, 1.0, 1.0)
 	score_label.add_theme_color_override("font_color", color)
 
+# Cria notificação centralizada na tela
+func create_notification(title: String, message: String, color: Color = Color.GOLD):
+	var notification_panel = Panel.new()
+	notification_panel.name = "UpgradeNotification"
+	
+	# Estilo do painel
+	var style_box = StyleBoxFlat.new()
+	style_box.bg_color = Color(0.1, 0.1, 0.1, 0.9)
+	style_box.border_color = color
+	style_box.border_width_left = 3
+	style_box.border_width_right = 3
+	style_box.border_width_top = 3
+	style_box.border_width_bottom = 3
+	style_box.corner_radius_top_left = 10
+	style_box.corner_radius_top_right = 10
+	style_box.corner_radius_bottom_left = 10
+	style_box.corner_radius_bottom_right = 10
+	notification_panel.add_theme_stylebox_override("panel", style_box)
+	
+	# Container para o texto
+	var vbox = VBoxContainer.new()
+	vbox.position = Vector2(20, 15)
+	
+	# Título
+	var title_label = Label.new()
+	title_label.text = title
+	title_label.add_theme_font_size_override("font_size", 24)
+	title_label.add_theme_color_override("font_color", color)
+	title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title_label)
+	
+	# Mensagem
+	var message_label = Label.new()
+	message_label.text = message
+	message_label.add_theme_font_size_override("font_size", 16)
+	message_label.add_theme_color_override("font_color", Color.WHITE)
+	message_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(message_label)
+	
+	notification_panel.add_child(vbox)
+	
+	# Tamanho do painel
+	notification_panel.custom_minimum_size = Vector2(400, 120)
+	notification_panel.size = Vector2(400, 120)
+	
+	# Posiciona no centro da tela
+	var viewport_size = get_viewport().get_visible_rect().size
+	notification_panel.position = (viewport_size - notification_panel.size) / 2
+	notification_panel.z_index = 2000
+	
+	add_child(notification_panel)
+	
+	# Animação de entrada (escala)
+	notification_panel.scale = Vector2(0.5, 0.5)
+	notification_panel.modulate.a = 0.0
+	
+	var entry_tween = create_tween()
+	entry_tween.set_parallel(true)
+	entry_tween.tween_property(notification_panel, "scale", Vector2(1.0, 1.0), 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	entry_tween.tween_property(notification_panel, "modulate:a", 1.0, 0.3)
+	
+	# Espera 3 segundos
+	await get_tree().create_timer(3.0).timeout
+	
+	# Animação de saída
+	var exit_tween = create_tween()
+	exit_tween.set_parallel(true)
+	exit_tween.tween_property(notification_panel, "scale", Vector2(0.5, 0.5), 0.3).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_IN)
+	exit_tween.tween_property(notification_panel, "modulate:a", 0.0, 0.3)
+	
+	await exit_tween.finished
+	notification_panel.queue_free()
+
 func setup_health_display():
 	# Verifica se o player existe e tem vida válida
 	if not player or player.max_health <= 0:
@@ -187,6 +264,13 @@ func _on_score_changed(new_score):
 
 func _on_inventory_changed():
 	update_inventory()
+
+func _on_upgrade_completed(new_level: int, new_damage: float):
+	# Cria notificação de upgrade no HUD
+	var title = "🔨 MACHADO MELHORADO! 🔨"
+	var message = "Nível: %d | Dano: %.1f" % [new_level, new_damage]
+	create_notification(title, message, Color(1.0, 0.84, 0.0))  # Dourado
+	print("📢 Notificação de upgrade exibida no HUD")
 
 func update_health_display(new_health = -1):
 	# Verifica se o health_container existe
@@ -401,6 +485,8 @@ func create_inventory_slot(item_name: String, count: int) -> Control:
 		var icon_label = Label.new()
 		if item_name == "wood":
 			icon_label.text = "🪵"
+		elif item_name == "stone":
+			icon_label.text = "🪨"
 		else:
 			icon_label.text = item_name[0].to_upper()
 		
@@ -685,12 +771,21 @@ func create_ground_item(item_name: String, count: int, world_position: Vector2):
 	ground_item.name = "GroundItem_" + item_name
 	ground_item.position = world_position
 	ground_item.add_to_group("ground_items")
+	ground_item.input_pickable = true  # Habilita detecção de cliques
 	
 	# Sprite visual do item
 	var sprite = ColorRect.new()
 	sprite.size = Vector2(20, 20)  # Aumentado para ser mais visível
 	sprite.position = Vector2(-10, -10)  # Centraliza o sprite
-	sprite.color = Color.GREEN if item_name == "wood" else Color.YELLOW
+	
+	# Define cor baseada no tipo de item
+	if item_name == "wood":
+		sprite.color = Color.GREEN
+	elif item_name == "stone":
+		sprite.color = Color.GRAY
+	else:
+		sprite.color = Color.YELLOW
+	
 	ground_item.add_child(sprite)
 	
 	# Efeito de flutuação
@@ -712,6 +807,14 @@ func create_ground_item(item_name: String, count: int, world_position: Vector2):
 	label.add_theme_color_override("font_color", Color.WHITE)
 	ground_item.add_child(label)
 	
+	# Label com dica de coleta
+	var hint_label = Label.new()
+	hint_label.text = "[Clique Esquerdo]"
+	hint_label.position = Vector2(-40, -50)
+	hint_label.add_theme_font_size_override("font_size", 8)
+	hint_label.add_theme_color_override("font_color", Color.YELLOW)
+	ground_item.add_child(hint_label)
+	
 	# Collision para detecção (menor que o visual para evitar pickup acidental)
 	var collision = CollisionShape2D.new()
 	var shape = RectangleShape2D.new()
@@ -728,6 +831,9 @@ func create_ground_item(item_name: String, count: int, world_position: Vector2):
 	ground_item.area_entered.connect(_on_ground_item_area_pickup.bind(ground_item))
 	ground_item.body_entered.connect(_on_ground_item_pickup.bind(ground_item))
 	
+	# Conecta evento de clique do mouse para coleta
+	ground_item.input_event.connect(_on_ground_item_clicked.bind(ground_item))
+	
 	# Adiciona à cena principal
 	get_tree().current_scene.add_child(ground_item)
 	
@@ -741,7 +847,38 @@ func _on_ground_item_area_pickup(ground_item: Area2D, area):
 	if area.is_in_group("player"):
 		pickup_ground_item(ground_item)
 
+func _on_ground_item_clicked(viewport, event, shape_idx, ground_item: Area2D):
+	# Coleta o item ao clicar com o botão esquerdo do mouse
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		# Verifica se o player está próximo o suficiente para coletar
+		if player:
+			var distance = player.global_position.distance_to(ground_item.global_position)
+			if distance < 150:  # Distância máxima para coletar (150 pixels)
+				pickup_ground_item(ground_item)
+			else:
+				# Mostra mensagem de feedback quando muito longe
+				var feedback_label = Label.new()
+				feedback_label.text = "Muito longe!"
+				feedback_label.add_theme_font_size_override("font_size", 12)
+				feedback_label.add_theme_color_override("font_color", Color.RED)
+				feedback_label.position = ground_item.position - Vector2(30, 50)
+				feedback_label.z_index = 1000
+				get_tree().current_scene.add_child(feedback_label)
+				
+				var feedback_tween = create_tween()
+				feedback_tween.set_parallel(true)
+				feedback_tween.tween_property(feedback_label, "position:y", feedback_label.position.y - 20, 0.5)
+				feedback_tween.tween_property(feedback_label, "modulate:a", 0.0, 0.5)
+				feedback_tween.tween_callback(feedback_label.queue_free)
+				
+				print("📦 Item muito longe para coletar (distância: %.1f)" % distance)
+
 func pickup_ground_item(ground_item: Area2D):
+	# Verifica se o item ainda é válido
+	if not is_instance_valid(ground_item):
+		print("⚠️ Item no chão não é válido")
+		return
+	
 	# Adiciona um pequeno delay para evitar pickup imediato após drop
 	if ground_item.has_meta("drop_time"):
 		var drop_time = ground_item.get_meta("drop_time")
@@ -749,16 +886,40 @@ func pickup_ground_item(ground_item: Area2D):
 			print("⏰ Item ainda em cooldown de pickup")
 			return
 	
+	# Verifica se tem os metadados necessários
+	if not ground_item.has_meta("item_name") or not ground_item.has_meta("item_count"):
+		print("⚠️ Item no chão sem metadados corretos")
+		return
+	
 	var item_name = ground_item.get_meta("item_name")
 	var item_count = ground_item.get_meta("item_count")
 	
 	# Adiciona o item de volta ao inventário
 	if player and player.has_method("add_item"):
 		player.add_item(item_name, item_count)
-		print("📦 Player coletou: ", item_name, " x", item_count)
+		print("✅ Player coletou: ", item_name, " x", item_count, " do chão")
+		
+		# Cria efeito visual de coleta
+		var pickup_label = Label.new()
+		pickup_label.text = "+" + str(item_count) + " " + item_name
+		pickup_label.add_theme_font_size_override("font_size", 16)
+		pickup_label.add_theme_color_override("font_color", Color.GREEN)
+		pickup_label.position = ground_item.position - Vector2(30, 50)
+		pickup_label.z_index = 1000
+		get_tree().current_scene.add_child(pickup_label)
+		
+		# Anima o texto de coleta
+		var pickup_tween = create_tween()
+		pickup_tween.set_parallel(true)
+		pickup_tween.tween_property(pickup_label, "position:y", pickup_label.position.y - 30, 1.0)
+		pickup_tween.tween_property(pickup_label, "modulate:a", 0.0, 1.0)
+		pickup_tween.tween_callback(pickup_label.queue_free)
 		
 		# Remove o item do chão
 		ground_item.queue_free()
+		
+		# Atualiza o inventário visual
+		update_inventory()
 	else:
 		print("⚠️ Player não encontrado ou não tem método add_item")
 
